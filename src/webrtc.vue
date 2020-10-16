@@ -1,5 +1,5 @@
 <template>
-  <div class="video-list" > 
+  <div class="video-list" >
       <div v-for="item in videoList"
           v-bind:video="item"
           v-bind:key="item.id"
@@ -54,6 +54,14 @@
         type: Boolean,
         default: true
       },
+      screen: {
+        type: Boolean,
+        default: false
+      },
+      oneway: {
+        type: Boolean,
+        default: false
+      },
       enableLogs: {
         type: Boolean,
         default: false
@@ -78,7 +86,9 @@
       this.rtcmConnection.enableLogs = this.enableLogs;
       this.rtcmConnection.session = {
         audio: this.enableAudio,
-        video: this.enableVideo
+        video: this.enableVideo,
+        screen: this.screen,
+        oneway: this.oneway,
       };
       this.rtcmConnection.sdpConstraints.mandatory = {
         OfferToReceiveAudio: this.enableAudio,
@@ -120,7 +130,7 @@
           }
         }
 
-        setTimeout(function(){ 
+        setTimeout(function(){
           for (var i = 0, len = that.$refs.videos.length; i < len; i++) {
             if (that.$refs.videos[i].id === stream.streamid)
             {
@@ -129,7 +139,7 @@
             }
           }
         }, 1000);
-        
+
         that.$emit('joined-room', stream.streamid);
       };
       this.rtcmConnection.onstreamended = function (stream) {
@@ -146,7 +156,15 @@
     methods: {
       join() {
          var that = this;
-         this.rtcmConnection.openOrJoin(this.roomId, function (isRoomExist, roomid) {
+         this.rtcmConnection.join(this.roomId, function (isRoomExist, roomid) {
+          if (isRoomExist === false && that.rtcmConnection.isInitiator === true) {
+            that.$emit('opened-room', roomid);
+          }
+        });
+      },
+      open() {
+        var that = this;
+        this.rtcmConnection.open(this.roomId, function (isRoomExist, roomid) {
           if (isRoomExist === false && that.rtcmConnection.isInitiator === true) {
             that.$emit('opened-room', roomid);
           }
